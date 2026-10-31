@@ -17,6 +17,39 @@ Paste a PostgreSQL migration and see which statements will lock or rewrite a liv
 
 Every rule's behaviour (which lock it takes, whether it rewrites the table) was measured on PostgreSQL 16, and every suggested fix is run against a real database. Targets PostgreSQL 11+.
 
+## Use it in CI (GitHub Action)
+
+Check every pull request's migrations automatically. Risky statements get inline marks in the diff and one summary comment with a safe version of each.
+See it on a real pull request: [demo](https://github.com/adnan909/postgres-migration-checker/pull/1).
+
+```yaml
+# .github/workflows/migrations.yml
+name: migration safety
+on:
+  pull_request:
+    paths: ['**/*.sql']
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pull-requests: write   # for the summary comment
+    steps:
+      - uses: actions/checkout@v4
+      - uses: adnan909/postgres-migration-checker@v1
+        with:
+          files: db/migrations/**/*.sql   # default: **/*.sql
+```
+
+| Input | Default | What it does |
+| --- | --- | --- |
+| `files` | `**/*.sql` | Glob patterns for migration files (comma or newline separated). Only files changed in the pull request are checked. |
+| `wrapped-in-transaction` | `true` | Set to `false` if your tool runs each migration outside a transaction. |
+| `fail-on` | `danger` | Fail the check on `danger`, on `warning` (and worse), or `never`. |
+| `comment` | `true` | Post one summary comment and keep it updated as you push fixes. Clean pull requests get no comment. |
+
+Works with any tool that keeps migrations as SQL files: Prisma (`prisma/migrations/*/migration.sql`), Supabase, Flyway, golang-migrate, dbmate, node-pg-migrate SQL files and more. Runs on Node with no dependencies, so it adds about a second to your job.
+
 ## Use it in your own tooling
 
 `checker.js` has no dependencies:
@@ -27,7 +60,7 @@ const { findings } = analyze(sql, { wrappedInTransaction: true });
 for (const f of findings) console.log(f.severity, `line ${f.line}:`, f.title);
 ```
 
-Run the tests with `node --test test.js`.
+Run the tests with `node --test test.js action/test.js`.
 
 ## Make Claude Code write safe migrations
 
