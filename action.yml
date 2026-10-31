@@ -1,5 +1,5 @@
 name: Postgres Migration Safety Check
-description: Flags SQL migrations that lock or rewrite live Postgres tables, fail on non-empty tables, or break running code, with a safe rewrite for each.
+description: Flags Postgres migrations that lock or rewrite live tables or break running code, with a safe fix for each.
 author: backendskills00
 branding:
   icon: database
