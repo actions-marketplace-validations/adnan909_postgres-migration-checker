@@ -1,0 +1,17 @@
+name: move major version tag
+on:
+  release:
+    types: [published]
+jobs:
+  tag:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+      - name: Point vN at this release (e.g. v1.2.0 -> v1)
+        run: |
+          tag="${GITHUB_REF_NAME}"
+          major="${tag%%.*}"
+          git tag -f "$major" "$tag"
+          git push -f origin "$major"
