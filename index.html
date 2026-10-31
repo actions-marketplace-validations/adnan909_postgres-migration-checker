@@ -80,7 +80,7 @@ footer{margin-top:40px;color:var(--muted);font-size:13px}
       </div>
     </div>
   </div>
-  <p class="priv">Runs entirely in your browser. Your SQL is never uploaded. Rules target PostgreSQL 11+ and were verified against PostgreSQL 16.</p>
+  <p class="priv">Runs entirely in your browser. Your SQL is never uploaded; we only count anonymous page visits (GoatCounter, no cookies). Rules target PostgreSQL 11+ and were verified against PostgreSQL 16.</p>
 
   <div id="results" aria-live="polite"></div>
 
@@ -181,5 +181,6 @@ UPDATE users SET plan = 'free';`;
   render();
 })();
 </script>
+<script data-goatcounter="https://backendskills00.goatcounter.com/count" async src="https://gc.zgo.at/count.js"></script>
 </body>
 </html>
