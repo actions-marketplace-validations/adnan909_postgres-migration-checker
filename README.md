@@ -1,21 +1,8 @@
 # Postgres Migration Safety Checker
 
-**Try it: https://adnan909.github.io/postgres-migration-checker/**
+**Check every pull request in CI with the GitHub Action below, or paste a migration into the web version: https://adnan909.github.io/postgres-migration-checker/**
 
 Paste a PostgreSQL migration and see which statements will lock or rewrite a live table, fail on a table that has data, or break your app during a rolling deploy, with a safe rewrite for each one. Runs entirely in your browser.
-
-## What it catches
-
-- `CREATE INDEX` without `CONCURRENTLY` (blocks writes)
-- `CONCURRENTLY` inside a transaction (the migration fails)
-- `ADD COLUMN` with a volatile default like `gen_random_uuid()` (rewrites the table), or `NOT NULL` with no default (fails on non-empty tables)
-- `ALTER COLUMN ... TYPE` (rewrite), `SET NOT NULL` (full scan under the strongest lock)
-- `FOREIGN KEY` / `CHECK` without `NOT VALID`, `UNIQUE` / `PRIMARY KEY` without `USING INDEX`
-- `RENAME` and `DROP` that break code still running during a deploy
-- `VACUUM FULL`, `CLUSTER`, `REINDEX`, `REFRESH MATERIALIZED VIEW`, in-migration `UPDATE`/`DELETE` backfills
-- Missing `lock_timeout`, and strong locks piling up inside one transaction
-
-Every rule's behaviour (which lock it takes, whether it rewrites the table) was measured on PostgreSQL 16, and every suggested fix is run against a real database. Targets PostgreSQL 11+.
 
 ## Use it in CI (GitHub Action)
 
@@ -49,6 +36,19 @@ jobs:
 | `comment` | `true` | Post one summary comment and keep it updated as you push fixes. Clean pull requests get no comment. |
 
 Works with any tool that keeps migrations as SQL files: Prisma (`prisma/migrations/*/migration.sql`), Supabase, Flyway, golang-migrate, dbmate, node-pg-migrate SQL files and more. Runs on Node with no dependencies, so it adds about a second to your job.
+
+## What it catches
+
+- `CREATE INDEX` without `CONCURRENTLY` (blocks writes)
+- `CONCURRENTLY` inside a transaction (the migration fails)
+- `ADD COLUMN` with a volatile default like `gen_random_uuid()` (rewrites the table), or `NOT NULL` with no default (fails on non-empty tables)
+- `ALTER COLUMN ... TYPE` (rewrite), `SET NOT NULL` (full scan under the strongest lock)
+- `FOREIGN KEY` / `CHECK` without `NOT VALID`, `UNIQUE` / `PRIMARY KEY` without `USING INDEX`
+- `RENAME` and `DROP` that break code still running during a deploy
+- `VACUUM FULL`, `CLUSTER`, `REINDEX`, `REFRESH MATERIALIZED VIEW`, in-migration `UPDATE`/`DELETE` backfills
+- Missing `lock_timeout`, and strong locks piling up inside one transaction
+
+Every rule's behaviour (which lock it takes, whether it rewrites the table) was measured on PostgreSQL 16, and every suggested fix is run against a real database. Targets PostgreSQL 11+.
 
 ## Use it in your own tooling
 
