@@ -1,0 +1,40 @@
+name: Postgres Migration Safety Check
+description: Flags SQL migrations that lock or rewrite live Postgres tables, fail on non-empty tables, or break running code, with a safe rewrite for each.
+author: backendskills00
+branding:
+  icon: database
+  color: green
+
+inputs:
+  files:
+    description: Glob patterns for migration files, comma or newline separated.
+    required: false
+    default: '**/*.sql'
+  wrapped-in-transaction:
+    description: Set to "false" if your migration tool does NOT wrap each file in a transaction.
+    required: false
+    default: 'true'
+  fail-on:
+    description: 'Fail the check at this severity or worse: "danger", "warning", or "never".'
+    required: false
+    default: danger
+  comment:
+    description: Post (and keep updating) one summary comment on the pull request.
+    required: false
+    default: 'true'
+  github-token:
+    description: Token used to list the pull request's files and post the comment.
+    required: false
+    default: ${{ github.token }}
+
+outputs:
+  dangers:
+    description: Number of danger findings.
+  warnings:
+    description: Number of warning findings.
+  files-checked:
+    description: Number of migration files checked.
+
+runs:
+  using: node24
+  main: action/index.js
