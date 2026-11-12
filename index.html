@@ -60,6 +60,12 @@ th{color:var(--muted);font-weight:600}
 td code,p code,li code{font:13px var(--mono);background:#21262d;padding:1px 5px;border-radius:4px}
 .cta{margin-top:32px;padding:18px;display:flex;gap:16px;align-items:center;flex-wrap:wrap;justify-content:space-between}
 .cta p{margin:0;max-width:560px}
+.ci{margin:20px 0 8px;padding:18px;border-color:#2ea04388}
+.ci h2{font-size:18px;margin:0 0 6px}
+.ci p{margin:0 0 12px;color:#c9d1d9;font-size:15px}
+.ci .row{display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-top:12px}
+.ci .row a{font-size:14px}
+.ci .small{color:var(--muted);font-size:13px;margin:10px 0 0}
 footer{margin-top:40px;color:var(--muted);font-size:13px}
 @media (max-width:600px){.wrap{padding-top:28px}th:nth-child(3),td:nth-child(3){display:none}}
 </style>
@@ -80,18 +86,27 @@ footer{margin-top:40px;color:var(--muted);font-size:13px}
       </div>
     </div>
   </div>
-  <p class="priv">Runs entirely in your browser. Your SQL is never uploaded; we only count anonymous page visits (GoatCounter, no cookies). Rules target PostgreSQL 11+ and were verified against PostgreSQL 16.</p>
+  <p class="priv">Runs entirely in your browser. Your SQL is never uploaded; we only count anonymous page visits and button clicks (GoatCounter, no cookies). Rules target PostgreSQL 11+ and were verified against PostgreSQL 16.</p>
 
   <div id="results" aria-live="polite"></div>
 
-  <div class="box cta">
-    <p><strong>Check every pull request automatically.</strong> The free GitHub Action runs these rules on changed migrations and comments with the safe version.</p>
-    <a href="https://github.com/adnan909/postgres-migration-checker#use-it-in-ci-github-action"><button type="button">Add to CI</button></a>
+  <div class="box ci" id="ci">
+    <h2>Catch this on every pull request, automatically</h2>
+    <p>The same rules as a free GitHub Action. It checks only the migrations a pull request changes, marks the risky lines in the diff and leaves one comment with the safe version. No account, no signup, works on private repos, adds about a second to the job.</p>
+    <pre id="ci-yaml"></pre>
+    <div class="row">
+      <button class="primary" type="button" id="ci-copy">Copy workflow</button>
+      <span class="small">Save it as <code>.github/workflows/migrations.yml</code>.</span>
+    </div>
+    <div class="row">
+      <a id="ci-demo" href="https://github.com/adnan909/postgres-migration-checker/pull/1">See it on a real pull request</a>
+      <a id="ci-docs" href="https://github.com/adnan909/postgres-migration-checker#use-it-in-ci-github-action">Options (file paths, fail level)</a>
+    </div>
   </div>
 
   <div class="box cta">
     <p><strong>Want Claude Code to write migrations like this in the first place?</strong> The free <code>postgres-safe-migrations</code> skill teaches it these rules.</p>
-    <a href="https://github.com/adnan909/free-sample"><button class="primary" type="button">Get the free skill</button></a>
+    <a id="skill-link" href="https://github.com/adnan909/free-sample"><button type="button">Get the free skill</button></a>
   </div>
 
   <section class="about">
@@ -120,7 +135,7 @@ footer{margin-top:40px;color:var(--muted);font-size:13px}
   </section>
 
   <footer>
-    Made by <a href="https://x.com/backendskills00">@backendskills00</a>. Part of the <a href="https://adnology0.gumroad.com/l/backend-skills-pack">Backend Skills Pack</a>, Claude Code skills for TypeScript, GraphQL and Postgres backends.
+    Made by <a href="https://x.com/backendskills00">@backendskills00</a>. Part of the <a id="pack-link" href="https://adnology0.gumroad.com/l/backend-skills-pack">Backend Skills Pack</a>, Claude Code skills for TypeScript, GraphQL and Postgres backends.
   </footer>
 </main>
 
@@ -138,6 +153,28 @@ ALTER TABLE orders ADD CONSTRAINT orders_user_fk
   FOREIGN KEY (user_id) REFERENCES users (id);
 ALTER TABLE users RENAME COLUMN name TO full_name;
 UPDATE users SET plan = 'free';`;
+
+  const YAML = `name: migration safety
+on:
+  pull_request:
+    paths: ['**/*.sql']
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pull-requests: write
+    steps:
+      - uses: actions/checkout@v4
+      - uses: adnan909/postgres-migration-checker@v1`;
+
+  // anonymous GoatCounter events (no cookies, no SQL sent): which actions people take
+  const sent = {};
+  function track(name, once) {
+    if (once && sent[name]) return;
+    sent[name] = true;
+    try { if (window.goatcounter && window.goatcounter.count) window.goatcounter.count({ path: 'event-' + name, title: name, event: true }); } catch (e) {}
+  }
 
   const esc = (s) => s.replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
   const label = { danger: 'danger', warning: 'warning', info: 'note' };
@@ -157,6 +194,7 @@ UPDATE users SET plan = 'free';`;
     html += `<span>${statements} statement${statements === 1 ? '' : 's'} checked</span>`;
     for (const s of ['danger', 'warning', 'info']) if (count(s)) html += `<span class="pill ${s}">${count(s)} ${label[s]}${count(s) > 1 && s !== 'info' ? 's' : count(s) > 1 ? 's' : ''}</span>`;
     html += '</div>';
+    html += `<p class="priv">${findings.length === 1 ? 'This would' : 'These would all'} have been flagged on the pull request by the free GitHub Action. <a href="#ci" id="jump-ci">Add it in one step ↓</a></p>`;
     findings.forEach((f, i) => {
       html += `<article class="box finding ${f.severity}">
         <div class="fhead"><span class="pill ${f.severity}">${label[f.severity]}</span><h3>${esc(f.title)}</h3><span class="ln">line ${f.line}</span></div>
@@ -167,7 +205,10 @@ UPDATE users SET plan = 'free';`;
       </article>`;
     });
     out.innerHTML = html;
+    const jump = $('jump-ci');
+    if (jump) jump.addEventListener('click', () => track('jump-ci'));
     out.querySelectorAll('[data-copy]').forEach((b) => b.addEventListener('click', () => {
+      track('copy-fix');
       navigator.clipboard.writeText(findings[+b.dataset.copy].fix).then(() => {
         b.textContent = 'Copied';
         setTimeout(() => (b.textContent = 'Copy'), 1200);
@@ -175,8 +216,23 @@ UPDATE users SET plan = 'free';`;
     }));
   }
 
+  $('ci-yaml').textContent = YAML;
+  $('ci-copy').addEventListener('click', () => {
+    track('ci-copy');
+    const b = $('ci-copy');
+    navigator.clipboard.writeText(YAML).then(() => {
+      b.textContent = 'Copied: save as .github/workflows/migrations.yml';
+      setTimeout(() => (b.textContent = 'Copy workflow'), 2500);
+    }, () => { b.textContent = 'Select the text above and copy it'; });
+  });
+  [['ci-demo', 'ci-demo'], ['ci-docs', 'ci-docs'], ['skill-link', 'skill-click'], ['pack-link', 'pack-click']]
+    .forEach(([id, name]) => { const a = $(id); if (a) a.addEventListener('click', () => track(name)); });
+
   let t;
-  sql.addEventListener('input', () => { clearTimeout(t); t = setTimeout(render, 200); });
+  sql.addEventListener('input', () => {
+    clearTimeout(t); t = setTimeout(render, 200);
+    if (sql.value.trim() && sql.value !== EXAMPLE) track('own-sql', true);
+  });
   txn.addEventListener('change', render);
   $('example').addEventListener('click', () => { sql.value = EXAMPLE; render(); });
   $('clear').addEventListener('click', () => { sql.value = ''; render(); sql.focus(); });
