@@ -99,7 +99,8 @@ footer{margin-top:40px;color:var(--muted);font-size:13px}
       <span class="small">Save it as <code>.github/workflows/migrations.yml</code>.</span>
     </div>
     <div class="row">
-      <a id="ci-demo" href="https://github.com/adnan909/postgres-migration-checker/pull/1">See it on a real pull request</a>
+      <a id="ci-demo" href="https://github.com/adnan909/postgres-migration-checker-demo/pull/1">See it on a real pull request</a>
+      <a id="ci-template" href="https://github.com/adnan909/postgres-migration-checker-demo">Try it in 30 s on a demo repo</a>
       <a id="ci-docs" href="https://github.com/adnan909/postgres-migration-checker#use-it-in-ci-github-action">Options (file paths, fail level)</a>
     </div>
   </div>
@@ -225,7 +226,7 @@ jobs:
       setTimeout(() => (b.textContent = 'Copy workflow'), 2500);
     }, () => { b.textContent = 'Select the text above and copy it'; });
   });
-  [['ci-demo', 'ci-demo'], ['ci-docs', 'ci-docs'], ['skill-link', 'skill-click'], ['pack-link', 'pack-click']]
+  [['ci-demo', 'ci-demo'], ['ci-template', 'ci-template'], ['ci-docs', 'ci-docs'], ['skill-link', 'skill-click'], ['pack-link', 'pack-click']]
     .forEach(([id, name]) => { const a = $(id); if (a) a.addEventListener('click', () => track(name)); });
 
   let t;

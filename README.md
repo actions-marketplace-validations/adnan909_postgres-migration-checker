@@ -7,7 +7,7 @@ Paste a PostgreSQL migration and see which statements will lock or rewrite a liv
 ## Use it in CI (GitHub Action)
 
 Check every pull request's migrations automatically. Risky statements get inline marks in the diff and one summary comment with a safe version of each.
-See it on a real pull request: [demo](https://github.com/adnan909/postgres-migration-checker/pull/1).
+See it on a real pull request: [demo](https://github.com/adnan909/postgres-migration-checker-demo/pull/1). Try it yourself in 30 seconds with the [demo template repo](https://github.com/adnan909/postgres-migration-checker-demo).
 
 ```yaml
 # .github/workflows/migrations.yml
